@@ -1,0 +1,475 @@
+/*
+ * Copyright 2021 The DAPHNE Consortium
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
+
+#include <runtime/local/datastructures/DataObjectFactory.h>
+#include <runtime/local/datastructures/Matrix.h>
+#include <runtime/local/datastructures/ValueTypeUtils.h>
+
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <utility>
+#include <iomanip>
+
+#include <cassert>
+#include <cstddef>
+#include <cstring>
+
+/**
+ * @brief A sparse matrix in COOrdinate (COO) format.
+ *
+ */
+template<typename ValueType>
+class COOMatrix : public Matrix<ValueType> {
+    // `using`, so that we do not need to prefix each occurrence of these
+    // fields from the super-classes.
+    using Matrix<ValueType>::numRows;
+    using Matrix<ValueType>::numCols;
+
+    /**
+     * @brief The maximum number of non-zero values this matrix was allocated
+     * to accommodate.
+     */
+    size_t maxNumNonZeros;
+    size_t numNonZeros;
+
+    std::shared_ptr<ValueType> values;
+    std::shared_ptr<size_t> colIdxs;
+    std::shared_ptr<size_t> rowIdxs;
+
+    // Grant DataObjectFactory access to the private constructors and
+    // destructors.
+    template<class DataType, typename ... ArgTypes>
+    friend DataType *DataObjectFactory::create(ArgTypes ...);
+
+    template<class DataType>
+    friend void DataObjectFactory::destroy(const DataType *obj);
+
+    /**
+     * @brief Creates a `COOMatrix` and allocates enough memory for the
+     * specified size in the internal `values`, `colIdxs`, and `rowIdxs`
+     * arrays.
+     * 
+     * @param numRows The exact number of rows.
+     * @param numCols The exact number of columns.
+     * @param maxNumNonZeros The maximum number of non-zeros in the matrix.
+     * @param zero Whether the allocated memory of the internal arrays shall be
+     * initialized to zeros (`true`), or be left uninitialized (`false`).
+     */
+    COOMatrix(size_t numRows, size_t numCols, size_t maxNumNonZeros, bool zero) :
+            Matrix<ValueType>(numRows, numCols),
+            maxNumNonZeros(maxNumNonZeros),
+            numNonZeros(0),
+            values(new ValueType[maxNumNonZeros], std::default_delete<ValueType[]>()),
+            colIdxs(new size_t[maxNumNonZeros], std::default_delete<size_t[]>()),
+            rowIdxs(new size_t[maxNumNonZeros], std::default_delete<size_t[]>()) {
+        if (zero) {
+            memset(values.get(), 0, maxNumNonZeros * sizeof(ValueType));
+            memset(colIdxs.get(), 0, maxNumNonZeros * sizeof(size_t));
+            memset(rowIdxs.get(), 0, maxNumNonZeros * sizeof(size_t));
+        }
+    }
+
+    /**
+     * @brief Creates a `COOMatrix` around a matrix of another `COOMatrix`
+     * by copying the data.
+     * 
+     * @param src The other `COOMatrix`.
+     */
+    explicit COOMatrix(const COOMatrix<ValueType> *src) :
+            Matrix<ValueType>(src->numRows, src->numCols),
+            maxNumNonZeros(src->maxNumNonZeros),
+            numNonZeros(src->numNonZeros),
+            values(new ValueType[src->maxNumNonZeros], std::default_delete<ValueType[]>()),
+            colIdxs(new size_t[src->maxNumNonZeros], std::default_delete<size_t[]>()),
+            rowIdxs(new size_t[src->maxNumNonZeros], std::default_delete<size_t[]>()) {
+        assert(src && "src must not be null");
+
+        for (size_t i = 0; i < numNonZeros; ++i) {
+            values.get()[i] = src->values.get()[i];
+            colIdxs.get()[i] = src->colIdxs.get()[i];
+            rowIdxs.get()[i] = src->rowIdxs.get()[i];
+        }
+    }
+
+    virtual ~COOMatrix() {
+        // nothing to do
+    }
+
+    [[nodiscard]] std::pair<size_t, size_t> rowRange(size_t rowIdx) const {
+        size_t rowStart = 0, rowLength = 0, row;
+        for (size_t i = 0; i < numNonZeros; i++) {
+            row = rowIdxs.get()[i];
+            if (row > rowIdx) break;
+            if (row == rowIdx) {
+                if (rowLength == 0) rowStart = i;
+                rowLength++;
+            }
+        }
+
+        return std::make_pair(rowStart, rowLength);
+    }
+
+    void insert(size_t pos, size_t rowIdx, size_t colIdx, ValueType value) {
+        assert((numNonZeros < maxNumNonZeros) && "can't add any more nonzero values");
+
+        if (value == ValueType(0)) return;
+        for (size_t i = numNonZeros; i > pos; i--) {
+            rowIdxs.get()[i] = rowIdxs.get()[i - 1];
+            values.get()[i] = values.get()[i - 1];
+            colIdxs.get()[i] = colIdxs.get()[i - 1];
+        }
+        rowIdxs.get()[pos] = rowIdx;
+        values.get()[pos] = value;
+        colIdxs.get()[pos] = colIdx;
+        numNonZeros++;
+    }
+
+    void remove(size_t idx) {
+        for (size_t i = idx + 1; i < numNonZeros; i++) {
+            rowIdxs.get()[i - 1] = rowIdxs.get()[i];
+            values.get()[i - 1] = values.get()[i];
+            colIdxs.get()[i - 1] = colIdxs.get()[i];
+        }
+        numNonZeros--;
+    }
+
+    [[nodiscard]] std::pair<size_t, bool> findIndex(size_t row, size_t col, size_t start) const {
+        size_t i;
+        for (i = start; i < numNonZeros; ++i) {
+            size_t currentRow = rowIdxs.get()[i];
+            size_t currentCol = colIdxs.get()[i];
+            if (currentCol > col || currentRow > row) return std::make_pair(i, false);
+            if (rowIdxs.get()[i] == row && colIdxs.get()[i] == col) return std::make_pair(i, true);
+        }
+        return std::make_pair(i, false);
+    }
+
+public:
+    [[nodiscard]] size_t getMaxNumNonZeros() const {
+        return maxNumNonZeros;
+    }
+
+    [[nodiscard]] size_t getNumNonZeros() const {
+        return numNonZeros;
+    }
+
+    [[nodiscard]] size_t getNumNonZerosRow(size_t rowIdx) const {
+        assert((rowIdx < numRows) && "rowIdx is out of bounds");
+
+        size_t cnt = 0;
+        for (size_t i = 0; i < numNonZeros; i++) {
+            if (rowIdxs.get()[i] > rowIdx) break;
+            if (rowIdxs.get()[i] == rowIdx) cnt++;
+        }
+        return cnt;
+    }
+
+    [[nodiscard]] size_t getNumNonZerosCol(size_t colIdx) const {
+        assert((colIdx < numCols) && "colIdx is out of bounds");
+
+        size_t cnt = 0;
+        for (size_t i = 0; i < numNonZeros; i++) {
+            if (colIdxs.get()[i] == colIdx) cnt++;
+        }
+        return cnt;
+    }
+
+    ValueType *getValues() {
+        return values.get();
+    }
+
+    const ValueType *getValues() const {
+        return values.get();
+    }
+
+    size_t *getColIdxs() {
+        return colIdxs.get();
+    }
+
+    [[nodiscard]] const size_t *getColIdxs() const {
+        return colIdxs.get();
+    }
+
+    size_t *getRowIdxs() {
+        return rowIdxs.get();
+    }
+
+    [[nodiscard]] const size_t *getRowIdxs() const {
+        return rowIdxs.get();
+    }
+
+    ValueType *getValues(size_t rowIdx) {
+        assert((rowIdx <= numRows) && "rowIdx is out of bounds");
+
+        std::pair<size_t, size_t> range = rowRange(rowIdx);
+        size_t rowStart = range.first;
+        size_t rowLength = range.second;
+
+        if (rowLength == 0) return nullptr;
+        return values.get() + rowStart;
+    }
+
+    const ValueType *getValues(size_t rowIdx) const {
+        return const_cast<COOMatrix<ValueType> *>(this)->getValues(rowIdx);
+    }
+
+/*    size_t * getColIdxs(size_t rowIdx) {
+//        assert((rowIdx <= numRows) && "rowIdx is out of bounds");
+//        size_t rowStart, rowLength = 0, row;
+//        for (size_t i = 0; i < numNonZeros; i++)
+//        {
+//            row = rowIdxs.get()[i];
+//            if (row > rowIdx) break;
+//            if (row == rowIdx)
+//            {
+//                if (rowLength == 0)
+//                {
+//                    rowStart = i;
+//                }
+//                rowLength ++;
+//            }
+//        }
+//
+//        if (rowLength == 0)
+//        {
+//            return nullptr;
+//        }
+//        else
+//        {
+//            std::shared_ptr<size_t> retCols(new size_t[rowLength], std::default_delete<size_t[]>());
+//            for (size_t i = 0; i < rowLength; i++)
+//            {
+//                retCols.get()[i] = colIdxs.get()[rowStart + i];
+//            }
+//            return retCols.get();
+//        }
+//    }
+//
+//
+//    const size_t * getColIdxs(size_t rowIdx) const {
+//        return const_cast<COOMatrix<ValueType> *>(this)->getColIdxs(rowIdx);
+//    }
+ */
+
+    ValueType get(size_t rowIdx, size_t colIdx) const override {
+        assert((rowIdx < numRows) && "rowIdx is out of bounds");
+        assert((colIdx < numCols) && "colIdx is out of bounds");
+
+        std::pair<size_t, size_t> range = rowRange(rowIdx);
+        size_t rowStart = range.first;
+        size_t rowLength = range.second;
+
+        if (rowLength == 0) {
+            return ValueType(0);
+        } else {
+            for (size_t i = rowStart; i < rowStart + rowLength; i++) {
+                size_t col = colIdxs.get()[i];
+                if (col > colIdx) return ValueType(0);
+                if (col == colIdx) return values.get()[i];
+            }
+            return ValueType(0);
+        }
+    }
+
+    void set(size_t rowIdx, size_t colIdx, ValueType value) override {
+        assert((rowIdx < numRows) && "rowIdx is out of bounds");
+        assert((colIdx < numCols) && "colIdx is out of bounds");
+
+        std::pair<size_t, size_t> range = rowRange(rowIdx);
+        size_t rowStart = range.first;
+        size_t rowLength = range.second;
+        size_t rowEnd = rowStart + rowLength;
+
+        if (rowLength == 0) {
+            insert(rowEnd, rowIdx, colIdx, value);
+            return;
+        } else {
+            for (size_t i = rowStart; i < rowEnd; i++) {
+                if (colIdxs.get()[i] > colIdx) {
+                    insert(i, rowIdx, colIdx, value);
+                    return;
+                }
+                if (colIdx == colIdxs.get()[i]) {
+                    if (value == ValueType(0)) {
+                        remove(i);
+                        return;
+                    } else {
+                        values.get()[i] = value;
+                        return;
+                    }
+                }
+            }
+            insert(rowEnd, rowIdx, colIdx, value);
+            return;
+        }
+    }
+
+    void prepareAppend() override {
+        // do nothing
+    }
+
+    void append(size_t rowIdx, size_t colIdx, ValueType value) override {
+        assert((rowIdx < numRows) && "rowIdx is out of bounds");
+        assert((colIdx < numCols) && "colIdx is out of bounds");
+        assert((numNonZeros < maxNumNonZeros) && "can't add any more nonzero values");
+
+        if (value == ValueType(0)) return;
+
+        rowIdxs.get()[numNonZeros] = rowIdx;
+        values.get()[numNonZeros] = value;
+        colIdxs.get()[numNonZeros] = colIdx;
+        numNonZeros++;
+    }
+
+    void finishAppend() override {
+        // do nothing
+    }
+
+    void printValue(std::ostream &os, ValueType val) const {
+        switch (ValueTypeUtils::codeFor<ValueType>) {
+            case ValueTypeCode::SI8 :
+                os << static_cast<int32_t>(val);
+                break;
+            case ValueTypeCode::UI8 :
+                os << static_cast<uint32_t>(val);
+                break;
+            default :
+                os << val;
+                break;
+        }
+    }
+
+    /**
+     * @brief Pretty print of this matrix.
+     * @param os The stream to print to.
+     */
+    void print(std::ostream &os) const override {
+        os << "COOMatrix(" << numRows << 'x' << numCols << ", "
+           << "double" << ')' << std::endl << std::endl;
+
+        auto *colWidths = new int[numCols];
+        for (size_t i = 0; i < numCols; ++i) {
+            colWidths[i] = 1;
+        }
+
+        for (size_t i = 0; i < numNonZeros; ++i) {
+            ValueType value = values.get()[i];
+            std::ostringstream oss;
+            oss << value;
+            std::string strValue = oss.str();
+            colWidths[colIdxs.get()[i]] = std::max(static_cast<int>(strValue.length()), colWidths[colIdxs.get()[i]]);
+        }
+
+        size_t start = 0;
+        for (size_t row = 0; row < numRows; ++row) {
+            for (size_t col = 0; col < numCols; ++col) {
+                std::pair<size_t, size_t> searchRes = findIndex(row, col, start);
+                start = searchRes.first;
+                bool found = searchRes.second;
+                if (found) {
+                    os << std::setw(colWidths[col]) << values.get()[start] << " ";
+                } else {
+                    os << std::setw(colWidths[col]) << 0 << " ";
+                }
+            }
+            os << std::endl;
+        }
+
+        delete[] colWidths;
+    }
+
+    /**
+     * @brief Prints the internal arrays of this matrix.
+     * @param os The stream to print to.
+     */
+    void printRaw(std::ostream &os) const {
+        os << "COOMatrix(" << numRows << 'x' << numCols << ", "
+           << ValueTypeUtils::cppNameFor<ValueType> << ')' << std::endl;
+        os << "maxNumNonZeros: \t" << maxNumNonZeros << std::endl;
+        os << "numNonZeros: \t" << numNonZeros << std::endl;
+        os << "values: \t";
+        os << values.get()[0];
+        for (size_t i = 1; i < numNonZeros; i++)
+            os << ", " << values.get()[i];
+        os << std::endl;
+        os << "colIdxs: \t";
+        os << colIdxs.get()[0];
+        for (size_t i = 1; i < numNonZeros; i++)
+            os << ", " << colIdxs.get()[i];
+        os << std::endl;
+        os << "rowIdxs: \t";
+        os << rowIdxs.get()[0];
+        for (size_t i = 1; i < numNonZeros; i++)
+            os << ", " << rowIdxs.get()[i];
+        os << std::endl;
+    }
+
+    COOMatrix *sliceRow(size_t rl, size_t ru) const override {
+        auto *retMatrix = DataObjectFactory::create<COOMatrix>(ru - rl, numCols,
+                                                               std::min(maxNumNonZeros, numCols * (ru - rl)), true);
+
+        for (size_t i = rl; i < ru; i++) {
+            std::pair<size_t, size_t> range = rowRange(i);
+            size_t rowStart = range.first;
+            size_t rowLength = range.second;
+
+            for (size_t j = rowStart; j < rowStart + rowLength; j++) {
+                retMatrix->append(i - rl, colIdxs.get()[j], values.get()[j]);
+            }
+        }
+        return retMatrix;
+    }
+
+    COOMatrix *sliceCol(size_t cl, size_t cu) const override {
+        auto *retMatrix = DataObjectFactory::create<COOMatrix>(numRows, cu - cl,
+                                                               std::min(maxNumNonZeros, numRows * (cu - cl)), true);
+
+        for (size_t i = 0; i < numNonZeros; i++) {
+            size_t col = colIdxs.get()[i];
+            if (col < cl || col >= cu) continue;
+            retMatrix->append(rowIdxs.get()[i], col - cl, values.get()[i]);
+        }
+        return retMatrix;
+    }
+
+    COOMatrix *slice(size_t rl, size_t ru, size_t cl, size_t cu) const override {
+        auto *retMatrix = DataObjectFactory::create<COOMatrix>(ru - rl, cu - cl,
+                                                               std::min(maxNumNonZeros, (ru - rl) * (cu - cl)), true);
+
+        for (size_t i = 0; i < numNonZeros; i++) {
+            size_t row = rowIdxs.get()[i];
+            size_t col = colIdxs.get()[i];
+            if (row < rl || row >= ru || col < cl || col >= cu) continue;
+            retMatrix->append(row - rl, col - cl, values.get()[i]);
+        }
+        return retMatrix;
+    }
+
+    size_t bufferSize() {
+        return this->getNumItems() * sizeof(ValueType);
+    }
+
+    size_t serialize(std::vector<char> &buf) const override;
+};
+
+template<typename ValueType>
+std::ostream &operator<<(std::ostream &os, const COOMatrix<ValueType> &obj) {
+    obj.print(os);
+    return os;
+}

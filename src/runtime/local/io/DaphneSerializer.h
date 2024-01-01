@@ -22,6 +22,7 @@
 #include <runtime/local/datastructures/ValueTypeUtils.h>
 #include <runtime/local/datastructures/DenseMatrix.h>
 #include <runtime/local/datastructures/CSRMatrix.h>
+#include <runtime/local/datastructures/COOMatrix.h>
 #include <runtime/local/datastructures/Frame.h>
 
 #include <cassert>
@@ -831,6 +832,160 @@ struct DaphneSerializer<CSRMatrix<VT>, false> {
 // ----------------------------------------------------------------------------
 template<typename VT>
 struct DaphneSerializer<const CSRMatrix<VT>, false> : public DaphneSerializer<CSRMatrix<VT>, false> { };
+
+// ----------------------------------------------------------------------------
+// COOMatrix
+// ----------------------------------------------------------------------------
+/**
+ * @brief Serialize and deserialize COOMatrix data types.
+ *
+ * Contains static methods for finding the length in bytes, serializing and
+ * deserializing COOMatrix objects.
+*/
+template<typename VT>
+struct DaphneSerializer<COOMatrix<VT>, false> {
+    const COOMatrix<VT> *matrix;
+    COOMatrix<VT> **matrixPtr;
+    size_t chunkSize;
+    /**
+     * @brief The default serialization chunk size
+     */
+    static const size_t DEFAULT_SERIALIZATION_BUFFER_SIZE = 1048576;
+    // Size of the header
+    static const size_t HEADER_BUFFER_SIZE = 53;
+
+    /**
+     * @brief Returns the size of the header.
+    */
+    static size_t headerSize(const COOMatrix<VT> *arg) { return HEADER_BUFFER_SIZE; }
+
+    DaphneSerializer(const COOMatrix<VT> *matrix, size_t chunkSize = DEFAULT_SERIALIZATION_BUFFER_SIZE) : matrix(
+            matrix), chunkSize(chunkSize) {
+        // Since at least one chunk will contain the header, the minimum chunk size should be HEADER_BUFFER_SIZE bytes (so the header won't be partially serialized).
+        if (chunkSize < HEADER_BUFFER_SIZE)
+            throw std::runtime_error(
+                    "Minimum chunk size " + std::to_string(HEADER_BUFFER_SIZE) + " bytes"); // For now..?
+    };
+
+    DaphneSerializer(COOMatrix<VT> **matrix, size_t chunkSize = DEFAULT_SERIALIZATION_BUFFER_SIZE) : matrixPtr(matrix),
+    chunkSize(
+            chunkSize) {
+        // Since at least one chunk will contain the header, the minimum chunk size should be HEADER_BUFFER_SIZE bytes (so the header won't be partially serialized).
+        if (chunkSize < HEADER_BUFFER_SIZE)
+            throw std::runtime_error(
+                    "Minimum chunk size " + std::to_string(HEADER_BUFFER_SIZE) + " bytes"); // For now..?
+    };
+
+    /**
+     * @brief Calculates the byte length of the object.
+     *
+    */
+    static size_t length(const COOMatrix<VT> *arg) {
+        return -1;
+    };
+
+    /**
+     * @brief Creates a header and copies it to the buffer, containing information about the object (dimensions, types, other)
+     *
+     * @param arg The object to be serialized.
+     * @param buffer A pointer to copy the data.
+     * @param bufferIdx (optional) A byte index for the buffer pointer.
+    */
+    static size_t serializeHeader(const COOMatrix<VT> *arg, char *buffer, size_t bufferIdx = 0) {
+        return -1;
+    }
+
+    /**
+     * @brief Partially serializes an Daphne object into a buffer
+     *
+     * @param arg The daphne Matrix
+     * @param buffer A pointer to char, the buffer that data will be serialized to.
+     * @param chunkSize Optional The size of the buffer (default is DEFAULT_SERIALIZATION_BUFFER_SIZE). Since at least one chunk will contain the header, the minimum chunk size should be HEADER_BUFFER_SIZE bytes (so the header won't be partially serialized).
+     * @param serializeFromByte Optional The byte index of the object, at which serialization should begin (default 0).
+    */
+    static size_t
+    serialize(const COOMatrix<VT> *arg, char *buffer, size_t chunkSize = DEFAULT_SERIALIZATION_BUFFER_SIZE,
+              size_t serializeFromByte = 0) {
+        return -1;
+    };
+
+    /**
+     * @brief Partially serializes an Daphne object into a buffer. This overloaded function can allocate memory for the buffer if needed.
+     *
+     * @param arg The daphne Matrix
+     * @param buffer A pointer to pointer to char, the buffer that data will be serialized to.
+     * @param chunkSize Optional The size of the buffer (default is 0 - the size needed for the whole object)
+     * @param serializeFromByte Optional The byte index of the object, at which serialization should begin (default 0).
+    */
+    static size_t
+    serialize(const COOMatrix<VT> *arg, char **buffer, size_t chunkSize = 0, size_t serializeFromByte = 0) {
+        return -1;
+    }
+
+    /**
+     * @brief Partially serializes an Daphne object into a buffer. This overloaded function can allocate memory for the buffer if needed.
+     *
+     * @param arg The daphne Matrix
+     * @param buffer A pointer to pointer to char, the buffer that data will be serialized to.
+     * @param chunkSize Optional The size of the buffer (default is DEFAULT_SERIALIZATION_BUFFER_SIZE)
+     * @param serializeFromByte Optional The byte index of the object, at which serialization should begin.
+    */
+    static size_t serialize(const COOMatrix<VT> *arg, std::vector<char> &buffer, size_t serializeFromByte = 0) {
+        return -1;
+    }
+
+    /**
+     * @brief Deserializes the header of a buffer containing information about a COOMatrix.
+     *
+     * @param buf The buffer which contains the header.
+     * @param matrix The COOMatrix to initialize with the header information.
+     * @return COOMatrix<VT>* The result matrix.
+     */
+    static COOMatrix<VT> *deserializeHeader(const char *buffer, COOMatrix<VT> *matrix = nullptr) {
+        return nullptr;
+    }
+
+    /**
+     * @brief Deserializes a COOMatrix from a buffer.
+     *
+     * Deserialization can be done partially by specifing an byte-index as a starting point in the Matrix.
+     * Notice that index is related to the byte length of the matrix (provided by length(matrix)).
+     *
+     * @param buf The buffer containing the serialized data.
+     * @param chunkSize The size of the buffer.
+     * @param matrix The result matrix to write data.
+     * @param deserializeFromByte (Optional) The index of the @matrix that deserialization should begin writing data.
+     * @return COOMatrix<VT>* The result matrix.
+     */
+    static COOMatrix<VT> *
+    deserialize(const char *buffer, size_t chunkSize, COOMatrix<VT> *matrix = nullptr, size_t deserializeFromByte = 0) {
+        return nullptr;
+    };
+
+    /**
+      * @brief Deserializes a COOMatrix from a buffer.
+      *
+      * Deserialization can be done partially by specifing an byte-index as a starting point in the Matrix.
+      * Notice that index is related to the byte length of the matrix (provided by length(matrix)).
+      *
+      * @param buffer An std::vector<char> buffer containg serialized data.
+      * @param matrix The result matrix to write data.
+      * @param deserializeFromByte (Optional) The index of the @matrix that deserialization should begin writing data.
+      * @return COOMatrix<VT>* The result matrix.
+      */
+    static COOMatrix<VT> *
+    deserialize(const std::vector<char> &buffer, COOMatrix<VT> *matrix = nullptr, size_t deserializeFromByte = 0) {
+        return nullptr;
+    }
+};
+
+// ----------------------------------------------------------------------------
+// const COOMatrix
+// ----------------------------------------------------------------------------
+template<typename VT>
+struct DaphneSerializer<const COOMatrix<VT>, false> : public DaphneSerializer<COOMatrix<VT>, false> {
+};
+
 // ----------------------------------------------------------------------------
 // Frame
 // ----------------------------------------------------------------------------
