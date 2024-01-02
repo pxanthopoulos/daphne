@@ -22,7 +22,8 @@
 /* TODO COO serializer */
 template<typename ValueType>
 size_t COOMatrix<ValueType>::serialize(std::vector<char> &buf) const {
-    return DaphneSerializer<COOMatrix<ValueType>>::serialize(this, buf);
+    throw std::runtime_error("COOMatrix does not support serialization yet");
+//    return DaphneSerializer<COOMatrix<ValueType>>::serialize(this, buf);
 }
 
 // explicitly instantiate to satisfy linker
