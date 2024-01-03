@@ -22,6 +22,7 @@
 #include <runtime/local/datastructures/DenseMatrix.h>
 #include <runtime/local/kernels/UnaryOpCode.h>
 #include <runtime/local/kernels/EwUnarySca.h>
+#include <runtime/local/datastructures/COOMatrix.h>
 
 #include <cassert>
 #include <cstddef>
@@ -71,6 +72,31 @@ struct EwUnaryMat<DenseMatrix<VT>, DenseMatrix<VT>> {
                 valuesRes[c] = func(valuesArg[c], ctx);
             valuesArg += arg->getRowSkip();
             valuesRes += res->getRowSkip();
+        }
+    }
+};
+
+// ----------------------------------------------------------------------------
+// COOMatrix <- COOMatrix
+// ----------------------------------------------------------------------------
+
+template<typename VT>
+struct EwUnaryMat<COOMatrix<VT>, COOMatrix<VT>> {
+    static void apply(UnaryOpCode opCode, COOMatrix<VT> *& res, const COOMatrix<VT> * arg, DCTX(ctx)) {
+        const size_t numRows = arg->getNumRows();
+        const size_t numCols = arg->getNumCols();
+
+        if(res == nullptr)
+            res = DataObjectFactory::create<COOMatrix<VT>>(numRows, numCols, false);
+
+        const VT * valuesArg = arg->getValues();
+        VT * valuesRes = res->getValues();
+
+        EwUnaryScaFuncPtr<VT, VT> func = getEwUnaryScaFuncPtr<VT, VT>(opCode);
+
+        size_t numNonZeros = arg->getNumNonZeros();
+        for(size_t i = 0; i < numNonZeros; i++) {
+            valuesRes[i] = func(valuesArg[i], ctx);
         }
     }
 };
