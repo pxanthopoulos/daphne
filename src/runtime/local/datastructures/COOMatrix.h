@@ -203,6 +203,10 @@ public:
         return cnt;
     }
 
+    void incrNumNonZeros(size_t val) {
+        numNonZeros ++;
+    }
+
     [[nodiscard]] ValueType *getValues() {
         return values.get();
     }

@@ -18,6 +18,7 @@
 
 #include <runtime/local/context/DaphneContext.h>
 #include <runtime/local/datastructures/CSRMatrix.h>
+#include <runtime/local/datastructures/COOMatrix.h>
 #include <runtime/local/datastructures/DataObjectFactory.h>
 #include <runtime/local/datastructures/DenseMatrix.h>
 
@@ -116,5 +117,35 @@ struct Transpose<CSRMatrix<VT>, CSRMatrix<VT>> {
         }
         
         delete[] curRowOffsets;
+    }
+};
+
+// ----------------------------------------------------------------------------
+// COOMatrix <- COOMatrix
+// ----------------------------------------------------------------------------
+
+template<typename VT>
+struct Transpose<COOMatrix<VT>, COOMatrix<VT>> {
+    static void apply(COOMatrix<VT> *& res, const COOMatrix<VT> * arg, DCTX(ctx)) {
+        const size_t numRows = arg->getNumRows();
+        const size_t numCols = arg->getNumCols();
+
+        if(res == nullptr)
+            res = DataObjectFactory::create<COOMatrix<VT>>(numCols, numRows, arg->getMaxNumNonZeros(), false);
+        res->prepareAppend();   // (re)initialize the matrix for consecutive set calls (because the row,col pairs are not in the correct order
+
+        const VT * valuesArg = arg->getValues();
+        const size_t * colIdxsArg = arg->getColIdxs();
+        const size_t * rowIdxsArg = arg->getRowIdxs();
+
+        VT value;
+        size_t row, col;
+        size_t numNonZeros = arg->getNumNonZeros();
+        for (size_t i = 0; i < numNonZeros; i++) {
+            value = valuesArg[i];
+            col = colIdxsArg[i];
+            row = rowIdxsArg[i];
+            res->set(col, row, value);
+        }
     }
 };
