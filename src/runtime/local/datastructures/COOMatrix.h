@@ -204,7 +204,7 @@ public:
     }
 
     void incrNumNonZeros(size_t val) {
-        numNonZeros ++;
+        numNonZeros += val;
     }
 
     [[nodiscard]] ValueType *getValues() {
