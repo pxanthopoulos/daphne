@@ -203,15 +203,15 @@ public:
         return cnt;
     }
 
-    ValueType *getValues() {
+    [[nodiscard]] ValueType *getValues() {
         return values.get();
     }
 
-    const ValueType *getValues() const {
+    [[nodiscard]] const ValueType *getValues() const {
         return values.get();
     }
 
-    size_t *getColIdxs() {
+    [[nodiscard]] size_t *getColIdxs() {
         return colIdxs.get();
     }
 
@@ -219,7 +219,7 @@ public:
         return colIdxs.get();
     }
 
-    size_t *getRowIdxs() {
+    [[nodiscard]] size_t *getRowIdxs() {
         return rowIdxs.get();
     }
 
@@ -227,7 +227,7 @@ public:
         return rowIdxs.get();
     }
 
-    ValueType *getValues(size_t rowIdx) {
+    [[nodiscard]] ValueType *getValues(size_t rowIdx) {
         assert((rowIdx <= numRows) && "rowIdx is out of bounds");
 
         std::pair<size_t, size_t> range = rowRange(rowIdx, 0);
@@ -236,11 +236,11 @@ public:
         return values.get() + rowStart;
     }
 
-    const ValueType *getValues(size_t rowIdx) const {
+    [[nodiscard]] const ValueType *getValues(size_t rowIdx) const {
         return const_cast<COOMatrix<ValueType> *>(this)->getValues(rowIdx);
     }
 
-    size_t *getColIdxs(size_t rowIdx) {
+    [[nodiscard]] size_t *getColIdxs(size_t rowIdx) {
         assert((rowIdx <= numRows) && "rowIdx is out of bounds");
 
         std::pair<size_t, size_t> range = rowRange(rowIdx, 0);
