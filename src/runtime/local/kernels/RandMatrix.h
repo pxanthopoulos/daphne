@@ -27,6 +27,8 @@
 #include <random>
 #include <set>
 #include <type_traits>
+#include <vector>
+#include <unordered_set>
 
 #include <cassert>
 #include <cmath>
@@ -271,7 +273,7 @@ struct RandMatrix<COOMatrix<VT>, VT> {
 
         // The exact number of non-zeros to generate.
         // TODO Ideally, it should not be allowed that zero is included in [min, max].
-        const size_t nnz = static_cast<size_t>(round(numRows * numCols * sparsity));
+        const auto nnz = static_cast<size_t>(round(numRows * numCols * sparsity));
 
         if (res == nullptr)
             res = DataObjectFactory::create<COOMatrix<VT>>(numRows, numCols, nnz, false);
@@ -291,37 +293,54 @@ struct RandMatrix<COOMatrix<VT>, VT> {
                 std::uniform_int_distribution<VT>
         >::type distrVal(min, max);
 
-        // Generate non-zero values (positions in the matrix do not matter here).
         VT *valuesRes = res->getValues();
         for (size_t i = 0; i < nnz; i++)
             valuesRes[i] = distrVal(gen);
 
         std::uniform_int_distribution<size_t> distrRow(0, numRows - 1);
-        std::uniform_int_distribution<size_t> distrCol(0, numCols - 1);
-
         std::vector<size_t> rowSequence;
-        std::vector<size_t> colSequence;
-        std::unordered_set<size_t> rowUniqueValues;
-        std::unordered_set<size_t> colUniqueValues;
-
-        while (rowSequence.size() < nnz) {
+        for (size_t i = 0; i < nnz; ++i) {
             size_t randomValue = distrRow(gen);
+            rowSequence.push_back(randomValue);
+        }
+        std::sort(rowSequence.begin(), rowSequence.end());
 
-            if (rowUniqueValues.find(randomValue) == rowUniqueValues.end()) {
-                // If the value is not already in the sequence, add it
-                rowSequence.push_back(randomValue);
-                rowUniqueValues.insert(randomValue);
+        std::vector<size_t> colSequence;
+
+        std::vector<size_t> startRow;
+        size_t lastRow = -1;
+        for (size_t i = 0; i < nnz; ++i) {
+            if (rowSequence[i] != lastRow) startRow.push_back(i);
+            lastRow = rowSequence[i];
+        }
+        startRow.push_back(nnz);
+
+        std::uniform_int_distribution<size_t> distrCol(0, numRows - 1);
+
+        for (size_t i = 0; i < startRow.size() - 1; i++) {
+            size_t start = startRow[i];
+            size_t end = startRow[i + 1];
+            std::vector<size_t> subSequence;
+            std::unordered_set<size_t> uniqueValues;
+            while (subSequence.size() < end - start) {
+                size_t randomValue = distrCol(gen);
+                if (uniqueValues.find(randomValue) == uniqueValues.end()) {
+                    subSequence.push_back(randomValue);
+                    uniqueValues.insert(randomValue);
+                }
+            }
+
+            std::sort(subSequence.begin(), subSequence.end());
+            for (size_t value : subSequence) {
+                colSequence.push_back(value);
             }
         }
 
-        while (colSequence.size() < nnz) {
-            size_t randomValue = distrRow(gen);
-
-            if (colUniqueValues.find(randomValue) == colUniqueValues.end()) {
-                // If the value is not already in the sequence, add it
-                colSequence.push_back(randomValue);
-                colUniqueValues.insert(randomValue);
-            }
+        size_t * rowIdxs = res->getRowIdxs();
+        size_t * colIdxs = res->getColIdxs();
+        for (size_t i = 0; i < nnz; i++) {
+            rowIdxs[i] = rowSequence[i];
+            colIdxs[i] = colSequence[i];
         }
     }
 };
