@@ -106,13 +106,14 @@ TEST_CASE("COOMatrix sub-matrix works properly", TAG_DATASTRUCTURES) {
     const size_t maxnumNonZeros = 6;
 
     COOMatrix<ValueType> * mOrig = DataObjectFactory::create<COOMatrix<ValueType>>(numRowsOrig, numColsOrig, maxnumNonZeros, true);
-    COOMatrix<ValueType> * mSub = DataObjectFactory::create<COOMatrix<ValueType>>(mOrig, 3, 5);
 
     mOrig->set(0, 0, 5);
     mOrig->set(2, 2, 3);
     mOrig->set(1, 1, 4);
     mOrig->set(3, 3, 2);
     mOrig->set(4, 4, 1);
+
+    COOMatrix<ValueType> * mSub = DataObjectFactory::create<COOMatrix<ValueType>>(mOrig, 3, 5);
 
     // Sub-matrix dimensions are as expected.
     CHECK(mSub->getNumRows() == 2);
