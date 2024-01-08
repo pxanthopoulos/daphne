@@ -342,6 +342,7 @@ struct RandMatrix<COOMatrix<VT>, VT> {
             rowIdxs[i] = rowSequence[i];
             colIdxs[i] = colSequence[i];
         }
+        res->incrNumNonZeros(nnz);
     }
 };
 
