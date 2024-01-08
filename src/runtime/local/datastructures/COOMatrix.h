@@ -171,8 +171,9 @@ class COOMatrix : public Matrix<ValueType> {
         for (i = start; i < numNonZeros; ++i) {
             size_t currentRow = rowIdxs.get()[i];
             size_t currentCol = colIdxs.get()[i];
-            if (currentCol > col || currentRow > row) return std::make_pair(i, false);
-            if (rowIdxs.get()[i] == row && colIdxs.get()[i] == col) return std::make_pair(i, true);
+            if (currentRow > row) return std::make_pair(i, false);
+            if (currentRow == row && currentCol > col) return std::make_pair(i, false);
+            if (currentRow == row && currentCol == col) return std::make_pair(i, true);
         }
         return std::make_pair(i, false);
     }
