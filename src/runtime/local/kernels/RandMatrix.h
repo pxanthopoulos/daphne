@@ -299,8 +299,15 @@ struct RandMatrix<COOMatrix<VT>, VT> {
 
         std::uniform_int_distribution<size_t> distrRow(0, numRows - 1);
         std::vector<size_t> rowSequence;
+        std::vector<size_t> occurrences(numRows, 0);
         for (size_t i = 0; i < nnz; ++i) {
             size_t randomValue = distrRow(gen);
+
+            while (occurrences[randomValue] >= numCols) {
+                randomValue = distrRow(gen);
+            }
+
+            occurrences[randomValue]++;
             rowSequence.push_back(randomValue);
         }
         std::sort(rowSequence.begin(), rowSequence.end());
@@ -315,7 +322,7 @@ struct RandMatrix<COOMatrix<VT>, VT> {
         }
         startRow.push_back(nnz);
 
-        std::uniform_int_distribution<size_t> distrCol(0, numRows - 1);
+        std::uniform_int_distribution<size_t> distrCol(0, numCols - 1);
 
         for (size_t i = 0; i < startRow.size() - 1; i++) {
             size_t start = startRow[i];

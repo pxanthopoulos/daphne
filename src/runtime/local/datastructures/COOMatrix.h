@@ -149,7 +149,8 @@ class COOMatrix : public Matrix<ValueType> {
             }
         }
 
-        return std::make_pair(numNonZeros, rowLength);
+        if (rowLength == 0) return std::make_pair(numNonZeros, rowLength);
+        return std::make_pair(rowStart, rowLength);
     }
 
     void insert(size_t pos, size_t rowIdx, size_t colIdx, ValueType value) {
