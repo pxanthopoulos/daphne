@@ -178,18 +178,24 @@ struct GenGivenVals<COOMatrix<VT>> {
         size_t * colIdxs = res->getColIdxs();
         size_t * rowIdxs = res->getRowIdxs();
         size_t pos = 0;
-        size_t colIdx = 0;
-        size_t rowIdx = 0;
-        for(VT v : elements) {
+        size_t colIdx = -1;
+        size_t rowIdx = -1;
+        for(size_t i = 0; i < numCells; i++) {
+            if (i % numCols == 0) {
+                rowIdx ++;
+                colIdx = 0;
+            } else {
+                colIdx ++;
+            }
+            VT v = elements[i];
             if(v != VT(0)) {
                 values[pos] = v;
                 colIdxs[pos] = colIdx;
                 rowIdxs[pos] = rowIdx;
                 pos++;
             }
-            colIdx ++;
-            rowIdx ++;
         }
+        res->incrNumNonZeros(numNonZeros);
         return res;
     }
 };
