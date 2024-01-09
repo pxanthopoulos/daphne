@@ -18,6 +18,7 @@
 
 #include <runtime/local/context/DaphneContext.h>
 #include <runtime/local/datastructures/CSRMatrix.h>
+#include <runtime/local/datastructures/COOMatrix.h>
 #include <runtime/local/datastructures/DenseMatrix.h>
 #include <runtime/local/datastructures/Frame.h>
 
@@ -150,6 +151,55 @@ struct CheckEq<CSRMatrix<VT>> {
             if(memcmp(colIdxsBegLhs, colIdxsBegRhs, nnzLhs * sizeof(size_t)))
                 return false;
         
+        return true;
+    }
+};
+
+// ----------------------------------------------------------------------------
+// COOMatrix
+// ----------------------------------------------------------------------------
+
+template<typename VT>
+struct CheckEq<COOMatrix<VT>> {
+    static bool apply(const COOMatrix<VT> * lhs, const COOMatrix<VT> * rhs, DCTX(ctx)) {
+        if(lhs == rhs)
+            return true;
+
+        const size_t numRows = lhs->getNumRows();
+        const size_t numCols = lhs->getNumCols();
+
+        if(numRows != rhs->getNumRows() || numCols != rhs->getNumCols())
+            return false;
+
+        const VT * valuesBegLhs = lhs->getValues(0);
+        const VT * valuesEndLhs = lhs->getValues(numRows);
+        const VT * valuesBegRhs = rhs->getValues(0);
+        const VT * valuesEndRhs = rhs->getValues(numRows);
+
+        const size_t nnzLhs = valuesEndLhs - valuesBegLhs;
+        const size_t nnzRhs = valuesEndRhs - valuesBegRhs;
+
+        if(nnzLhs != nnzRhs)
+            return false;
+
+        if(valuesBegLhs != valuesBegRhs)
+            if(memcmp(valuesBegLhs, valuesBegRhs, nnzLhs * sizeof(VT)))
+                return false;
+
+        const size_t * colIdxsBegLhs = lhs->getColIdxs(0);
+        const size_t * colIdxsBegRhs = rhs->getColIdxs(0);
+
+        if(colIdxsBegLhs != colIdxsBegRhs)
+            if(memcmp(colIdxsBegLhs, colIdxsBegRhs, nnzLhs * sizeof(size_t)))
+                return false;
+
+        const size_t * RowIdxsBegLhs = lhs->getRowIdxs();
+        const size_t * RowIdxsBegRhs = rhs->getRowIdxs();
+
+        if(RowIdxsBegLhs != RowIdxsBegRhs)
+            if(memcmp(RowIdxsBegLhs, RowIdxsBegRhs, nnzLhs * sizeof(size_t)))
+                return false;
+
         return true;
     }
 };
