@@ -18,6 +18,7 @@
 
 #include <runtime/local/context/DaphneContext.h>
 #include <runtime/local/datastructures/CSRMatrix.h>
+#include <runtime/local/datastructures/COOMatrix.h>
 #include <runtime/local/datastructures/DenseMatrix.h>
 #include <runtime/local/datastructures/Frame.h>
 
@@ -154,6 +155,43 @@ struct CheckEqApprox<CSRMatrix<VT>> {
                 if (diff> eps)
                     return false;
             }   
+        }
+        return true;
+
+    }
+};
+
+// ----------------------------------------------------------------------------
+// COOMatrix
+// ----------------------------------------------------------------------------
+
+template<typename VT>
+struct CheckEqApprox<COOMatrix<VT>> {
+    static bool apply(const COOMatrix<VT> * lhs, const COOMatrix<VT> * rhs, double eps, DCTX(ctx)) {
+        if(lhs == rhs)
+            return true;
+
+        const size_t numRows = lhs->getNumRows();
+        const size_t numCols = lhs->getNumCols();
+
+        if(numRows != rhs->getNumRows() || numCols != rhs->getNumCols())
+            return false;
+
+        for(size_t r = 0; r < numRows; r++){
+            const VT * valuesLhs = lhs->getValues(r);
+            const VT * valuesRhs = rhs->getValues(r);
+            const size_t nnzElementsLhs= lhs->getNumNonZerosRow(r);
+            const size_t nnzElementsRhs= rhs->getNumNonZerosRow(r);
+            if (nnzElementsLhs!=nnzElementsRhs)
+                return false;
+            for(size_t c = 0; c < nnzElementsLhs; c++){
+                VT diff = valuesLhs[c] - valuesRhs[c];
+                if (diff==0)
+                    continue;
+                diff = diff>0? diff : -diff;
+                if (diff> eps)
+                    return false;
+            }
         }
         return true;
 
