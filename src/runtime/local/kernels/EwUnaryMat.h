@@ -77,26 +77,42 @@ struct EwUnaryMat<DenseMatrix<VT>, DenseMatrix<VT>> {
 };
 
 // ----------------------------------------------------------------------------
-// COOMatrix <- COOMatrix
+// DenseMatrix <- COOMatrix
 // ----------------------------------------------------------------------------
 
 template<typename VT>
-struct EwUnaryMat<COOMatrix<VT>, COOMatrix<VT>> {
-    static void apply(UnaryOpCode opCode, COOMatrix<VT> *& res, const COOMatrix<VT> * arg, DCTX(ctx)) {
+struct EwUnaryMat<DenseMatrix<VT>, COOMatrix<VT>> {
+    static void apply(UnaryOpCode opCode, DenseMatrix<VT> *& res, const COOMatrix<VT> * arg, DCTX(ctx)) {
         const size_t numRows = arg->getNumRows();
         const size_t numCols = arg->getNumCols();
 
         if(res == nullptr)
-            res = DataObjectFactory::create<COOMatrix<VT>>(numRows, numCols, false);
+            res = DataObjectFactory::create<DenseMatrix<VT>>(numRows, numCols, false);
 
-        const VT * valuesArg = arg->getValues();
         VT * valuesRes = res->getValues();
 
         EwUnaryScaFuncPtr<VT, VT> func = getEwUnaryScaFuncPtr<VT, VT>(opCode);
 
-        size_t numNonZeros = arg->getNumNonZeros();
-        for(size_t i = 0; i < numNonZeros; i++) {
-            valuesRes[i] = func(valuesArg[i], ctx);
+        const size_t * rowsArg = arg->getRowIdxs();
+        const size_t * colsArg = arg->getColIdxs();
+        const VT * valuesArg = arg->getValues();
+        size_t index = 0;
+        size_t argRow = rowsArg[index];
+        size_t argCol = colsArg[index];
+        VT argVal = valuesArg[index];
+        for(size_t r = 0; r < numRows; r++) {
+            for(size_t c = 0; c < numCols; c++) {
+                if (r == argRow && c == argCol) {
+                    valuesRes[c] = func(argVal, ctx);
+                    index ++;
+                    argRow = rowsArg[index];
+                    argCol = colsArg[index];
+                    argVal = valuesArg[index];
+                } else {
+                    valuesRes[c] = func(VT(0), ctx);
+                }
+            }
+            valuesRes += res->getRowSkip();
         }
     }
 };

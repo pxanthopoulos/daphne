@@ -254,7 +254,7 @@ struct EwBinaryMat<CSRMatrix<VT>, CSRMatrix<VT>, CSRMatrix<VT>> {
 
 template<typename VT>
 struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
-    static void apply(BinaryOpCode opCode, CSRMatrix<VT> *& res, const CSRMatrix<VT> * lhs, const CSRMatrix<VT> * rhs, DCTX(ctx)) {
+    static void apply(BinaryOpCode opCode, COOMatrix<VT> *& res, const COOMatrix<VT> * lhs, const COOMatrix<VT> * rhs, DCTX(ctx)) {
         const size_t numRows = lhs->getNumRows();
         const size_t numCols = lhs->getNumCols();
         if( numRows != rhs->getNumRows() || numCols != rhs->getNumCols() )
