@@ -269,7 +269,7 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
                 maxNnz = std::min(lhs->getNumNonZeros(), rhs->getNumNonZeros());
                 break;
             default:
-                throw std::runtime_error("EwBinaryMat(CSR) - unknown BinaryOpCode");
+                throw std::runtime_error("EwBinaryMat(COO) - unknown BinaryOpCode");
         }
 
         if(res == nullptr)
@@ -289,7 +289,10 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
                         VT * valuesRowRes = res->getValues(rowIdx);
                         const size_t * colIdxsRowLhs = lhs->getColIdxs(rowIdx);
                         const size_t * colIdxsRowRhs = rhs->getColIdxs(rowIdx);
+                        const size_t *rowIdxsRowArg1 = lhs->getRowIdxs(rowIdx);
+                        const size_t *rowIdxsRowArg2 = rhs->getRowIdxs(rowIdx);
                         size_t * colIdxsRowRes = res->getColIdxs(rowIdx);
+                        size_t * rowIdxsRowRes = res->getRowIdxs(rowIdx);
                         size_t posLhs = 0;
                         size_t posRhs = 0;
                         size_t posRes = 0;
@@ -299,31 +302,32 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
                                 colIdxsRowRes[posRes] = colIdxsRowLhs[posLhs];
                                 posLhs++;
                                 posRhs++;
-                                res->incrNumNonZeros(1);
                             }
                             else if(colIdxsRowLhs[posLhs] < colIdxsRowRhs[posRhs]) {
                                 valuesRowRes[posRes] = valuesRowLhs[posLhs];
                                 colIdxsRowRes[posRes] = colIdxsRowLhs[posLhs];
                                 posLhs++;
-                                res->incrNumNonZeros(1);
                             }
                             else {
                                 valuesRowRes[posRes] = valuesRowRhs[posRhs];
                                 colIdxsRowRes[posRes] = colIdxsRowRhs[posRhs];
                                 posRhs++;
-                                res->incrNumNonZeros(1);
                             }
+                            res->incrNumNonZeros(1);
+                            rowIdxsRowRes[posRes] = rowIdx;
                             posRes++;
                         }
                         // copy from left
                         const size_t restRowLhs = nnzRowLhs - posLhs;
                         memcpy(valuesRowRes + posRes, valuesRowLhs + posLhs, restRowLhs * sizeof(VT));
                         memcpy(colIdxsRowRes + posRes, colIdxsRowLhs + posLhs, restRowLhs * sizeof(size_t));
+                        memcpy(rowIdxsRowRes + posRes, rowIdxsRowArg1 + posLhs, restRowLhs * sizeof(size_t));
                         res->incrNumNonZeros(restRowLhs);
                         // copy from right
                         const size_t restRowRhs = nnzRowRhs - posRhs;
                         memcpy(valuesRowRes + posRes, valuesRowRhs + posRhs, restRowRhs * sizeof(VT));
                         memcpy(colIdxsRowRes + posRes, colIdxsRowRhs + posRhs, restRowRhs * sizeof(size_t));
+                        memcpy(rowIdxsRowRes + posRes, rowIdxsRowArg2 + posRhs, restRowRhs * sizeof(size_t));
                         res->incrNumNonZeros(restRowRhs);
 
                     }
@@ -331,12 +335,14 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
                         // copy from left
                         memcpy(res->getValues(rowIdx), lhs->getValues(rowIdx), nnzRowLhs * sizeof(VT));
                         memcpy(res->getColIdxs(rowIdx), lhs->getColIdxs(rowIdx), nnzRowLhs * sizeof(size_t));
+                        memcpy(res->getRowIdxs(rowIdx), lhs->getRowIdxs(rowIdx), nnzRowLhs * sizeof(size_t));
                         res->incrNumNonZeros(nnzRowLhs);
                     }
                     else if(nnzRowRhs) {
                         // copy from right
                         memcpy(res->getValues(rowIdx), rhs->getValues(rowIdx), nnzRowRhs * sizeof(VT));
                         memcpy(res->getColIdxs(rowIdx), rhs->getColIdxs(rowIdx), nnzRowRhs * sizeof(size_t));
+                        memcpy(res->getRowIdxs(rowIdx), rhs->getRowIdxs(rowIdx), nnzRowRhs * sizeof(size_t));
                         res->incrNumNonZeros(nnzRowRhs);
                     }
                 }
@@ -354,6 +360,7 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
                         const size_t * colIdxsRowLhs = lhs->getColIdxs(rowIdx);
                         const size_t * colIdxsRowRhs = rhs->getColIdxs(rowIdx);
                         size_t * colIdxsRowRes = res->getColIdxs(rowIdx);
+                        size_t * rowIdxsRowRes = res->getRowIdxs(rowIdx);
                         size_t posLhs = 0;
                         size_t posRhs = 0;
                         size_t posRes = 0;
@@ -363,6 +370,7 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
                                 colIdxsRowRes[posRes] = colIdxsRowLhs[posLhs];
                                 posLhs++;
                                 posRhs++;
+                                rowIdxsRowRes[posRes] = rowIdx;
                                 posRes++;
                                 res->incrNumNonZeros(1);
                             }
@@ -372,15 +380,12 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, COOMatrix<VT>> {
                                 posRhs++;
                         }
                     }
-
                 }
                 break;
             }
             default:
                 throw std::runtime_error("EwBinaryMat(COO) - unknown BinaryOpCode");
         }
-
-        // TODO Update number of non-zeros in result in the end.
     }
 };
 
@@ -462,7 +467,6 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, DenseMatrix<VT>> {
     static void apply(BinaryOpCode opCode, COOMatrix<VT> *& res, const COOMatrix<VT> * lhs, const DenseMatrix<VT> * rhs, DCTX(ctx)) {
         const size_t numRows = lhs->getNumRows();
         const size_t numCols = lhs->getNumCols();
-        // TODO: lhs broadcast
         if( (numRows != rhs->getNumRows() &&  rhs->getNumRows() != 1)
             || (numCols != rhs->getNumCols() && rhs->getNumCols() != 1 ) )
             throw std::runtime_error("EwBinaryMat(COO) - lhs and rhs must have the same dimensions (or broadcast)");
@@ -493,6 +497,8 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, DenseMatrix<VT>> {
                         VT * valuesRowRes = res->getValues(rowIdx);
                         const size_t * colIdxsRowLhs = lhs->getColIdxs(rowIdx);
                         size_t * colIdxsRowRes = res->getColIdxs(rowIdx);
+                        const size_t * rowIdxsRowLhs = lhs->getRowIdxs(rowIdx);
+                        size_t * rowIdxsRowRes = res->getRowIdxs(rowIdx);
                         auto rhsRow = (rhs->getNumRows() == 1 ? 0 : rowIdx);
                         size_t posRes = 0;
                         for (size_t posLhs = 0; posLhs < nnzRowLhs; ++posLhs) {
@@ -501,20 +507,18 @@ struct EwBinaryMat<COOMatrix<VT>, COOMatrix<VT>, DenseMatrix<VT>> {
                             if(rVal != 0) {
                                 valuesRowRes[posRes] = func(valuesRowLhs[posLhs], rVal, ctx);
                                 colIdxsRowRes[posRes] = colIdxsRowLhs[posLhs];
+                                rowIdxsRowRes[posRes] = rowIdxsRowLhs[posLhs];
                                 posRes++;
                                 res->incrNumNonZeros(1);
                             }
                         }
                     }
-
                 }
                 break;
             }
             default:
                 throw std::runtime_error("EwBinaryMat(COO) - unknown BinaryOpCode");
         }
-
-        // TODO Update number of non-zeros in result in the end.
     }
 };
 

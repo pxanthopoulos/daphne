@@ -269,6 +269,19 @@ public:
         return const_cast<COOMatrix<ValueType> *>(this)->getColIdxs(rowIdx);
     }
 
+    [[nodiscard]] size_t *getRowIdxs(size_t rowIdx) {
+        assert((rowIdx <= numRows) && "rowIdx is out of bounds");
+
+        std::pair<size_t, size_t> range = rowRange(rowIdx, 0);
+        size_t rowStart = range.first;
+
+        return rowIdxs.get() + rowStart;
+    }
+
+    [[nodiscard]] const size_t *getRowIdxs(size_t rowIdx) const {
+        return const_cast<COOMatrix *>(this)->getRowIdxs(rowIdx);
+    }
+
     ValueType get(size_t rowIdx, size_t colIdx) const override {
         assert((rowIdx < numRows) && "rowIdx is out of bounds");
         assert((colIdx < numCols) && "colIdx is out of bounds");
