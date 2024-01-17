@@ -103,7 +103,7 @@ TEST_CASE("COOMatrix sub-matrix works properly", TAG_DATASTRUCTURES) {
 
     const size_t numRowsOrig = 10;
     const size_t numColsOrig = 10;
-    const size_t maxnumNonZeros = 6;
+    const size_t maxnumNonZeros = 10;
 
     COOMatrix<ValueType> * mOrig = DataObjectFactory::create<COOMatrix<ValueType>>(numRowsOrig, numColsOrig, maxnumNonZeros, true);
     COOMatrix<ValueType> * mSub = DataObjectFactory::create<COOMatrix<ValueType>>(mOrig, 3, 5);
@@ -119,9 +119,9 @@ TEST_CASE("COOMatrix sub-matrix works properly", TAG_DATASTRUCTURES) {
     CHECK(mSub->getNumCols() == numColsOrig);
 
     // Sub-matrix shares arrays with original.
-    CHECK(mSub->getValues()[0] == mOrig->getValues()[0]);
-    CHECK(mSub->getColIdxs()[0] == mOrig->getColIdxs()[0]);
-    CHECK(mSub->getRowIdxs()[0] == mOrig->getRowIdxs()[0]);
+    CHECK(mSub->getValues()[0] == mOrig->getValues()[3]);
+    CHECK(mSub->getColIdxs()[0] == mOrig->getColIdxs()[3]);
+    CHECK(mSub->getRowIdxs()[0] == mOrig->getRowIdxs()[3]);
 
     CHECK(mOrig->get(3, 3) == mSub->get(0, 3));
     CHECK(mOrig->get(4, 4) == mSub->get(1, 4));
