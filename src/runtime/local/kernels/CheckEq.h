@@ -171,35 +171,34 @@ struct CheckEq<COOMatrix<VT>> {
         if(numRows != rhs->getNumRows() || numCols != rhs->getNumCols())
             return false;
 
-        const VT * valuesBegLhs = lhs->getValues(0);
-        const VT * valuesEndLhs = lhs->getValues(numRows);
-        const VT * valuesBegRhs = rhs->getValues(0);
-        const VT * valuesEndRhs = rhs->getValues(numRows);
+        const VT * valuesLhs = lhs->getValues();
+        const size_t * rowsLhs = lhs->getRowIdxs();
+        const size_t * colsLhs = lhs->getColIdxs();
 
-        const size_t nnzLhs = valuesEndLhs - valuesBegLhs;
-        const size_t nnzRhs = valuesEndRhs - valuesBegRhs;
+        const VT * valuesRhs = rhs->getValues();
+        const size_t * rowsRhs = rhs->getRowIdxs();
+        const size_t * colsRhs = rhs->getColIdxs();
+
+        const size_t nnzLhs = lhs->getNumNonZeros();
+        const size_t nnzRhs = rhs->getNumNonZeros();
+
+        size_t lowerRowLhs = lhs->getLowerRow();
+        size_t lowerRowRhs = rhs->getLowerRow();
 
         if(nnzLhs != nnzRhs)
             return false;
 
-        if(valuesBegLhs != valuesBegRhs)
-            if(memcmp(valuesBegLhs, valuesBegRhs, nnzLhs * sizeof(VT)))
-                return false;
-
-        const size_t * colIdxsBegLhs = lhs->getColIdxs(0);
-        const size_t * colIdxsBegRhs = rhs->getColIdxs(0);
-
-        if(colIdxsBegLhs != colIdxsBegRhs)
-            if(memcmp(colIdxsBegLhs, colIdxsBegRhs, nnzLhs * sizeof(size_t)))
-                return false;
-
-        const size_t * RowIdxsBegLhs = lhs->getRowIdxs();
-        const size_t * RowIdxsBegRhs = rhs->getRowIdxs();
-
-        if(RowIdxsBegLhs != RowIdxsBegRhs)
-            if(memcmp(RowIdxsBegLhs, RowIdxsBegRhs, nnzLhs * sizeof(size_t)))
-                return false;
-
+        for (size_t i = 0; i < nnzLhs; i++) {
+            const size_t rowLhs = rowsLhs[i] - lowerRowLhs;
+            const size_t rowRhs = rowsRhs[i] - lowerRowRhs;
+            if (rowLhs != rowRhs) return false;
+            const size_t colLhs = colsLhs[i];
+            const size_t colRhs = colsRhs[i];
+            if (colLhs != colRhs) return false;
+            const VT valLhs = valuesLhs[i];
+            const VT valRhs = valuesRhs[i];
+            if (valLhs != valRhs) return false;
+        }
         return true;
     }
 };

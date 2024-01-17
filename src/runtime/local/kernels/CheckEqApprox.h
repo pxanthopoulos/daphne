@@ -177,24 +177,38 @@ struct CheckEqApprox<COOMatrix<VT>> {
         if(numRows != rhs->getNumRows() || numCols != rhs->getNumCols())
             return false;
 
-        for(size_t r = 0; r < numRows; r++){
-            const VT * valuesLhs = lhs->getValues(r);
-            const VT * valuesRhs = rhs->getValues(r);
-            const size_t nnzElementsLhs= lhs->getNumNonZerosRow(r);
-            const size_t nnzElementsRhs= rhs->getNumNonZerosRow(r);
-            if (nnzElementsLhs!=nnzElementsRhs)
+        const VT * valuesLhs = lhs->getValues();
+        const size_t * rowsLhs = lhs->getRowIdxs();
+        const size_t * colsLhs = lhs->getColIdxs();
+
+        const VT * valuesRhs = rhs->getValues();
+        const size_t * rowsRhs = rhs->getRowIdxs();
+        const size_t * colsRhs = rhs->getColIdxs();
+
+        const size_t nnzLhs = lhs->getNumNonZeros();
+        const size_t nnzRhs = rhs->getNumNonZeros();
+
+        size_t lowerRowLhs = lhs->getLowerRow();
+        size_t lowerRowRhs = rhs->getLowerRow();
+
+        if(nnzLhs != nnzRhs)
+            return false;
+
+        for (size_t i = 0; i < nnzLhs; i++) {
+            const size_t rowLhs = rowsLhs[i] - lowerRowLhs;
+            const size_t rowRhs = rowsRhs[i] - lowerRowRhs;
+            if (rowLhs != rowRhs) return false;
+            const size_t colLhs = colsLhs[i];
+            const size_t colRhs = colsRhs[i];
+            if (colLhs != colRhs) return false;
+            const VT valLhs = valuesLhs[i];
+            const VT valRhs = valuesRhs[i];
+            VT diff = valLhs - valRhs;
+            diff = diff > 0 ? diff : -diff;
+            if (diff > eps)
                 return false;
-            for(size_t c = 0; c < nnzElementsLhs; c++){
-                VT diff = valuesLhs[c] - valuesRhs[c];
-                if (diff==0)
-                    continue;
-                diff = diff>0? diff : -diff;
-                if (diff> eps)
-                    return false;
-            }
         }
         return true;
-
     }
 };
 

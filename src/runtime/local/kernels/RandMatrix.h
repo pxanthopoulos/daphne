@@ -349,7 +349,10 @@ struct RandMatrix<COOMatrix<VT>, VT> {
             rowIdxs[i] = rowSequence[i];
             colIdxs[i] = colSequence[i];
         }
-        res->incrNumNonZeros(nnz);
+
+        valuesRes[nnz] = VT(0);
+        rowIdxs[nnz] = size_t(-1);
+        colIdxs[nnz] = size_t(-1);
     }
 };
 

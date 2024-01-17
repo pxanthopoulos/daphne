@@ -132,7 +132,14 @@ struct Transpose<COOMatrix<VT>, COOMatrix<VT>> {
 
         if(res == nullptr)
             res = DataObjectFactory::create<COOMatrix<VT>>(numCols, numRows, arg->getMaxNumNonZeros(), false);
-        res->prepareAppend();   // (re)initialize the matrix for consecutive set calls (because the row,col pairs are not in the correct order
+
+        // (re)initialize the matrix for consecutive set calls (because the row,col pairs are not in the correct order
+        VT * valuesRes = res->getValues();
+        size_t * colIdxsRes = res->getColIdxs();
+        size_t * rowIdxsRes = res->getRowIdxs();
+        valuesRes[0] = VT(0);
+        colIdxsRes[0] = size_t(-1);
+        rowIdxsRes[0] = size_t(-1);
 
         const VT * valuesArg = arg->getValues();
         const size_t * colIdxsArg = arg->getColIdxs();

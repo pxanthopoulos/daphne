@@ -195,7 +195,9 @@ struct GenGivenVals<COOMatrix<VT>> {
                 pos++;
             }
         }
-        res->incrNumNonZeros(numNonZeros);
+        values[pos] = VT(0);
+        colIdxs[pos] = size_t(-1);
+        rowIdxs[pos] = size_t(-1);
         return res;
     }
 };

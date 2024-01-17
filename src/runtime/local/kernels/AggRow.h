@@ -319,9 +319,7 @@ struct AggRow<DenseMatrix<VTRes>, COOMatrix<VTArg>> {
                 }
                 valuesRes += res->getRowSkip();
             }
-            valuesRes = res->getValues();
             DataObjectFactory::destroy<DenseMatrix<VTRes>>(tmp);
-
         }
     }
 };
