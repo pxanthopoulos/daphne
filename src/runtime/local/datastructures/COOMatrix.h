@@ -48,7 +48,7 @@ class COOMatrix : public Matrix<ValueType> {
     size_t maxNumNonZeros;
 
     /**
-     * @brief We need these in order to accomodate row-based sub-matrix views.
+     * @brief We need these in order to accommodate row-based sub-matrix views.
      */
     size_t lowerRow;
     size_t upperRow;
