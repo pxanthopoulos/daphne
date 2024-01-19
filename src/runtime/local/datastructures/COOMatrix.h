@@ -54,6 +54,7 @@ class COOMatrix : public Matrix<ValueType> {
     size_t upperRow;
 
     size_t appendHelp = 0;
+    bool view;
 
     std::shared_ptr<ValueType> values;
     std::shared_ptr<size_t> colIdxs;
@@ -83,6 +84,7 @@ class COOMatrix : public Matrix<ValueType> {
             maxNumNonZeros(maxNumNonZeros),
             lowerRow(0),
             upperRow(numRows),
+            view(false),
             values(new ValueType[maxNumNonZeros + 1], std::default_delete<ValueType[]>()),
             colIdxs(new size_t[maxNumNonZeros + 1], std::default_delete<size_t[]>()),
             rowIdxs(new size_t[maxNumNonZeros + 1], std::default_delete<size_t[]>()) {
@@ -109,7 +111,8 @@ class COOMatrix : public Matrix<ValueType> {
             Matrix<ValueType>(rowUpperExcl - rowLowerIncl, src->numCols),
             maxNumNonZeros(std::min(src->maxNumNonZeros, src->numCols * (rowUpperExcl - rowLowerIncl))),
             lowerRow(rowLowerIncl),
-            upperRow(rowUpperExcl) {
+            upperRow(rowUpperExcl),
+            view(true) {
         assert(src && "src must not be null");
         assert((rowLowerIncl < src->numRows) && "rowLowerIncl is out of bounds");
         assert((rowUpperExcl <= src->numRows) && "rowUpperExcl is out of bounds");
@@ -186,6 +189,10 @@ class COOMatrix : public Matrix<ValueType> {
     }
 
 public:
+    [[nodiscard]] bool isView() const {
+        return view;
+    }
+
     [[nodiscard]] size_t getLowerRow() const {
         return lowerRow;
     }
@@ -389,7 +396,7 @@ public:
      */
     void print(std::ostream &os) const override {
         os << "COOMatrix(" << numRows << 'x' << numCols << ", "
-           << "double" << ')' << std::endl << std::endl;
+           << ValueTypeUtils::cppNameFor<ValueType> << ')' << std::endl << std::endl;
 
         auto *colWidths = new int[numCols];
         for (size_t i = 0; i < numCols; ++i) {

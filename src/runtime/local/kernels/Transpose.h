@@ -137,22 +137,31 @@ struct Transpose<COOMatrix<VT>, COOMatrix<VT>> {
         VT * valuesRes = res->getValues();
         size_t * colIdxsRes = res->getColIdxs();
         size_t * rowIdxsRes = res->getRowIdxs();
-        valuesRes[0] = VT(0);
-        colIdxsRes[0] = size_t(-1);
-        rowIdxsRes[0] = size_t(-1);
 
         const VT * valuesArg = arg->getValues();
         const size_t * colIdxsArg = arg->getColIdxs();
         const size_t * rowIdxsArg = arg->getRowIdxs();
 
-        VT value;
-        size_t row, col;
-        size_t numNonZeros = arg->getNumNonZeros();
-        for (size_t i = 0; i < numNonZeros; i++) {
-            value = valuesArg[i];
-            col = colIdxsArg[i];
-            row = rowIdxsArg[i];
-            res->set(col, row, value);
+        std::vector<std::pair<size_t, size_t>> result;
+
+        size_t size = 0;
+        for (size_t i = 0; colIdxsArg[i] != size_t(-1); ++i) {
+            result.emplace_back(colIdxsArg[i], i);
+            size++;
         }
+
+        std::sort(result.begin(), result.end(), [](const auto &a, const auto &b) {
+            return a.first < b.first;
+        });
+
+        for (size_t i = 0; i < size; ++i) {
+            valuesRes[i] = valuesArg[result[i].second];
+            colIdxsRes[i] = rowIdxsArg[result[i].second];
+            rowIdxsRes[i] = result[i].first;
+        }
+
+        valuesRes[size] = int(0);
+        colIdxsRes[size] = size_t(-1);
+        rowIdxsRes[size] = size_t(-1);
     }
 };
