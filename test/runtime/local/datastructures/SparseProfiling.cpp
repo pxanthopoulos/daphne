@@ -392,8 +392,6 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
     }
     outputFile.close();
     CHECK(!(outputFile.is_open()));
-
-    std::cout << "gsav finished" << std::endl;
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("empty log_aggall file", TAG_DATASTRUCTURES, (DenseMatrix), (double)) {
