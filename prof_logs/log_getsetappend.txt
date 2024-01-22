@@ -1,24 +1,24 @@
-Test: Get, Class: DenseMatrix, Size: 250000, Get count: 250000, Valuetype: double, Execution time: 26481μs
-Test: Set, Class: DenseMatrix, Size: 250000, Set count: 250000, Valuetype: double, Execution time: 27336μs
-Test: Append, Class: DenseMatrix, Size: 250000, Append count: 250000, Valuetype: double, Execution time: 6132μs
-Test: View, Class: DenseMatrix, Size: 250000, Count: 250000, Valuetype: double, Difference from original to view: -21.3582%
-Test: Get, Class: DenseMatrix, Size: 250000, Get count: 250000, Valuetype: uint8_t, Execution time: 22091μs
-Test: Set, Class: DenseMatrix, Size: 250000, Set count: 250000, Valuetype: uint8_t, Execution time: 28244μs
-Test: Append, Class: DenseMatrix, Size: 250000, Append count: 250000, Valuetype: uint8_t, Execution time: 4191μs
-Test: View, Class: DenseMatrix, Size: 250000, Count: 250000, Valuetype: uint8_t, Difference from original to view: 6.04822%
-Test: Get, Class: CSRMatrix, Size: 250000, Get count: 250000, Valuetype: double, Execution time: 51222μs
-Test: Set, Class: CSRMatrix, Size: 250000, Set count: 250000, Valuetype: double, Execution time: 10111804μs
-Test: Append, Class: CSRMatrix, Size: 250000, Append count: 250000, Valuetype: double, Execution time: 6512μs
-Test: View, Class: CSRMatrix, Size: 250000, Count: 250000, Valuetype: double, Difference from original to view: -6.45636%
-Test: Get, Class: CSRMatrix, Size: 250000, Get count: 250000, Valuetype: uint8_t, Execution time: 65369μs
-Test: Set, Class: CSRMatrix, Size: 250000, Set count: 250000, Valuetype: uint8_t, Execution time: 9805443μs
-Test: Append, Class: CSRMatrix, Size: 250000, Append count: 250000, Valuetype: uint8_t, Execution time: 2600μs
-Test: View, Class: CSRMatrix, Size: 250000, Count: 250000, Valuetype: uint8_t, Difference from original to view: -45.3879%
-Test: Get, Class: COOMatrix, Size: 250000, Get count: 250000, Valuetype: double, Execution time: 5425μs
-Test: Set, Class: COOMatrix, Size: 250000, Set count: 250000, Valuetype: double, Execution time: 36784296μs
-Test: Append, Class: COOMatrix, Size: 250000, Append count: 250000, Valuetype: double, Execution time: 5386μs
-Test: View, Class: COOMatrix, Size: 250000, Count: 250000, Valuetype: double, Difference from original to view: -2.70848%
-Test: Get, Class: COOMatrix, Size: 250000, Get count: 250000, Valuetype: uint8_t, Execution time: 5642μs
-Test: Set, Class: COOMatrix, Size: 250000, Set count: 250000, Valuetype: uint8_t, Execution time: 26239837μs
-Test: Append, Class: COOMatrix, Size: 250000, Append count: 250000, Valuetype: uint8_t, Execution time: 2693μs
-Test: View, Class: COOMatrix, Size: 250000, Count: 250000, Valuetype: uint8_t, Difference from original to view: -0.236125%
+Test: Get, Class: DenseMatrix, Size: 250000, Get count: 250000, Valuetype: double, Execution time: 9653μs
+Test: Set, Class: DenseMatrix, Size: 250000, Set count: 250000, Valuetype: double, Execution time: 11973μs
+Test: Append, Class: DenseMatrix, Size: 250000, Append count: 250000, Valuetype: double, Execution time: 2901μs
+Test: View, Class: DenseMatrix, Size: 250000, Count: 250000, Valuetype: double, Difference from original to view: -7.18448%
+Test: Get, Class: DenseMatrix, Size: 250000, Get count: 250000, Valuetype: uint8_t, Execution time: 11394μs
+Test: Set, Class: DenseMatrix, Size: 250000, Set count: 250000, Valuetype: uint8_t, Execution time: 12388μs
+Test: Append, Class: DenseMatrix, Size: 250000, Append count: 250000, Valuetype: uint8_t, Execution time: 1818μs
+Test: View, Class: DenseMatrix, Size: 250000, Count: 250000, Valuetype: uint8_t, Difference from original to view: -5.96326%
+Test: Get, Class: CSRMatrix, Size: 250000, Get count: 250000, Valuetype: double, Execution time: 24942μs
+Test: Set, Class: CSRMatrix, Size: 250000, Set count: 250000, Valuetype: double, Execution time: 3390742μs
+Test: Append, Class: CSRMatrix, Size: 250000, Append count: 250000, Valuetype: double, Execution time: 3093μs
+Test: View, Class: CSRMatrix, Size: 250000, Count: 250000, Valuetype: double, Difference from original to view: -3.55135%
+Test: Get, Class: CSRMatrix, Size: 250000, Get count: 250000, Valuetype: uint8_t, Execution time: 23969μs
+Test: Set, Class: CSRMatrix, Size: 250000, Set count: 250000, Valuetype: uint8_t, Execution time: 4362178μs
+Test: Append, Class: CSRMatrix, Size: 250000, Append count: 250000, Valuetype: uint8_t, Execution time: 1593μs
+Test: View, Class: CSRMatrix, Size: 250000, Count: 250000, Valuetype: uint8_t, Difference from original to view: -49.5294%
+Test: Get, Class: COOMatrix, Size: 250000, Get count: 250000, Valuetype: double, Execution time: 3407μs
+Test: Set, Class: COOMatrix, Size: 250000, Set count: 250000, Valuetype: double, Execution time: 15981372μs
+Test: Append, Class: COOMatrix, Size: 250000, Append count: 250000, Valuetype: double, Execution time: 2836μs
+Test: View, Class: COOMatrix, Size: 250000, Count: 250000, Valuetype: double, Difference from original to view: 63.201%
+Test: Get, Class: COOMatrix, Size: 250000, Get count: 250000, Valuetype: uint8_t, Execution time: 3374μs
+Test: Set, Class: COOMatrix, Size: 250000, Set count: 250000, Valuetype: uint8_t, Execution time: 15955696μs
+Test: Append, Class: COOMatrix, Size: 250000, Append count: 250000, Valuetype: uint8_t, Execution time: 1640μs
+Test: View, Class: COOMatrix, Size: 250000, Count: 250000, Valuetype: uint8_t, Difference from original to view: 38.0631%
