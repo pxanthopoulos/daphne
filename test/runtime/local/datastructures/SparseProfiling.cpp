@@ -613,7 +613,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewbinary", TAG_DATASTRUCTURES, (DenseMatrix,
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: AggRow, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: EwBinary, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
 
             DataObjectFactory::destroy(m1);
         }
@@ -669,7 +669,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewunary", TAG_DATASTRUCTURES, (DenseMatrix, 
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: AggRow, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: EwUnary, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
 
             DataObjectFactory::destroy(m1);
         }
