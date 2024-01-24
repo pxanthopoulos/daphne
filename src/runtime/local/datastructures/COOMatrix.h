@@ -234,8 +234,9 @@ public:
         size_t cnt = 0, i = 0;
         while (true) {
             size_t col = colIdxs.get()[i];
+            size_t row = rowIdxs.get()[i];
             if (col == size_t(-1)) break;
-            if (col == colIdx) cnt++;
+            if (col == colIdx && row >= lowerRow && row < upperRow) cnt++;
             i++;
         }
         return cnt;
