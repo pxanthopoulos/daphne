@@ -476,7 +476,7 @@ public:
     }
 
     size_t bufferSize() {
-        return this->getNumItems() * sizeof(ValueType);
+        return (maxNumNonZeros + 1) * (sizeof(ValueType) + sizeof(size_t) + sizeof(size_t));
     }
 
     size_t serialize(std::vector<char> &buf) const override;
