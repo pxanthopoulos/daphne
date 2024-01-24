@@ -475,8 +475,8 @@ public:
         throw std::runtime_error("COOMatrix does not support slicing yet");
     }
 
-    size_t bufferSize() {
-        return maxNumNonZeros * (sizeof(ValueType) + sizeof(size_t) + sizeof(size_t));
+    [[nodiscard]] size_t bufferSize() {
+        return (maxNumNonZeros + 1) * (sizeof(ValueType) + sizeof(size_t) + sizeof(size_t));
     }
 
     size_t serialize(std::vector<char> &buf) const override;
