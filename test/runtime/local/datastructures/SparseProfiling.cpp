@@ -41,7 +41,7 @@
 #include <type_traits>
 #include <filesystem>
 
-template <typename T>
+template<typename T>
 std::string getClassName() {
     if constexpr (std::is_same<T, COOMatrix<typename T::VT>>::value) {
         return "COOMatrix";
@@ -60,7 +60,7 @@ TEMPLATE_PRODUCT_TEST_CASE("create log dir", TAG_DATASTRUCTURES, (DenseMatrix), 
     try {
         if (!fs::exists(directoryPath))
             fs::create_directory(directoryPath);
-    } catch (const std::filesystem::filesystem_error& e) {
+    } catch (const std::filesystem::filesystem_error &e) {
         std::cerr << "Error creating directory: " << e.what() << std::endl;
     }
 }
@@ -72,7 +72,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_random file", TAG_DATASTRUCTURES, (DenseMa
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile random", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile random", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/logs_random.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -92,7 +93,8 @@ TEMPLATE_PRODUCT_TEST_CASE("profile random", TAG_DATASTRUCTURES, (DenseMatrix, C
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: Random, Class: " << getClassName<DT>() << ", Size: " << numRows << "x" << numCols << ", Sparsity: " << sparsity << ", Valuetype: "
+            outputFile << "Test: Random, Class: " << getClassName<DT>() << ", Size: " << numRows << "x" << numCols
+                       << ", Sparsity: " << sparsity << ", Valuetype: "
                        << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs"
                        << std::endl;
 
@@ -110,7 +112,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_transpose file", TAG_DATASTRUCTURES, (Dens
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile transpose", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile transpose", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/log_transpose.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -121,10 +124,10 @@ TEMPLATE_PRODUCT_TEST_CASE("profile transpose", TAG_DATASTRUCTURES, (DenseMatrix
     const VT min = 100;
     const VT max = 200;
 
-    for(double sparsity : {0.01, 0.03, 0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95}) {
+    for (double sparsity: {0.01, 0.03, 0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95}) {
         DYNAMIC_SECTION("sparsity = " << sparsity) {
-            DT * m = nullptr;
-            DT * res = nullptr;
+            DT *m = nullptr;
+            DT *res = nullptr;
 
             randMatrix<DT, VT>(m, numRows, numCols, min, max, sparsity, -1, nullptr);
             auto start_time = std::chrono::high_resolution_clock::now();
@@ -132,7 +135,9 @@ TEMPLATE_PRODUCT_TEST_CASE("profile transpose", TAG_DATASTRUCTURES, (DenseMatrix
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: Transpose, Class: " << getClassName<DT>() << ", Size: " << numRows << "x" << numCols << ", Sparsity: " << sparsity << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: Transpose, Class: " << getClassName<DT>() << ", Size: " << numRows << "x" << numCols
+                       << ", Sparsity: " << sparsity << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT>
+                       << ", Execution time: " << duration.count() << "μs" << std::endl;
 
             DataObjectFactory::destroy(m);
         }
@@ -148,7 +153,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_gengivenvals file", TAG_DATASTRUCTURES, (D
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile gengivenvals", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile gengivenvals", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/log_gengivenvals.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -157,7 +163,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile gengivenvals", TAG_DATASTRUCTURES, (DenseMat
     const VT min = 100;
     const VT max = 200;
 
-    for(size_t size : {500, 1000, 10000, 100000, 1000000}) {
+    for (size_t size: {500, 1000, 10000, 100000, 1000000}) {
         DYNAMIC_SECTION("size = " << size) {
             auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
             std::default_random_engine gen(seed);
@@ -178,11 +184,13 @@ TEMPLATE_PRODUCT_TEST_CASE("profile gengivenvals", TAG_DATASTRUCTURES, (DenseMat
             }
 
             auto start_time = std::chrono::high_resolution_clock::now();
-            DT * m = genGivenVals<DT>(10, result);
+            DT *m = genGivenVals<DT>(10, result);
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: GenGivenVals, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: GenGivenVals, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: "
+                       << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs"
+                       << std::endl;
 
             DataObjectFactory::destroy(m);
         }
@@ -198,7 +206,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_getsetappend file", TAG_DATASTRUCTURES, (D
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/log_getsetappend.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -210,7 +219,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
     const size_t size = 250000;
     const size_t numRows = 500;
     const size_t numCols = size / numRows;
-    const size_t count = 250000;
+    const size_t count = 10000;
     size_t rowLowerIncl = 100;
     size_t rowUpperExcl = 400;
 
@@ -237,7 +246,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
     std::uniform_int_distribution<size_t> distrRowView(0, rowUpperExcl - rowLowerIncl - 1);
     std::uniform_int_distribution<size_t> distrCol(0, numCols - 1);
 
-    for(char type : {'g', 's', 'a', 'v'}) {
+    for (char type: {'g', 's', 'a', 'v'}) {
         DYNAMIC_SECTION("type = " << type) {
             if (type == 'g') {
                 std::vector<VT> result;
@@ -245,7 +254,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
                 for (size_t i = 0; i < size; ++i) {
                     result.push_back(distrValNZ(gen));
                 }
-                DT * m = genGivenVals<DT>(numRows, result);
+                DT *m = genGivenVals<DT>(numRows, result);
 
                 auto start_time = std::chrono::high_resolution_clock::now();
                 for (size_t i = 0; i < count; ++i) {
@@ -254,10 +263,11 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
                 auto end_time = std::chrono::high_resolution_clock::now();
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-                outputFile << "Test: Get, Class: " << getClassName<DT>() << ", Size: " << size << ", Get count: " << count << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
-            }
-            else if (type == 's') {
-                DT * m;
+                outputFile << "Test: Get, Class: " << getClassName<DT>() << ", Size: " << size << ", Get count: "
+                           << count << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: "
+                           << duration.count() << "μs" << std::endl;
+            } else if (type == 's') {
+                DT *m;
 
                 if constexpr (std::is_same<DT, DenseMatrix<typename DT::VT>>::value) {
                     m = DataObjectFactory::create<DT>(numRows, numCols, true);
@@ -272,9 +282,10 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
                 auto end_time = std::chrono::high_resolution_clock::now();
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-                outputFile << "Test: Set, Class: " << getClassName<DT>() << ", Size: " << size << ", Set count: " << count << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
-            }
-            else if (type == 'a') {
+                outputFile << "Test: Set, Class: " << getClassName<DT>() << ", Size: " << size << ", Set count: "
+                           << count << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: "
+                           << duration.count() << "μs" << std::endl;
+            } else if (type == 'a') {
                 std::vector<size_t> rowSequence;
                 std::vector<size_t> occurrences(numRows, 0);
                 for (size_t i = 0; i < size; ++i) {
@@ -313,12 +324,12 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
                     }
 
                     std::sort(subSequence.begin(), subSequence.end());
-                    for (size_t value : subSequence) {
+                    for (size_t value: subSequence) {
                         colSequence.push_back(value);
                     }
                 }
 
-                DT * m;
+                DT *m;
 
                 if constexpr (std::is_same<DT, DenseMatrix<typename DT::VT>>::value) {
                     m = DataObjectFactory::create<DT>(numRows, numCols, true);
@@ -335,14 +346,15 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
                 auto end_time = std::chrono::high_resolution_clock::now();
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-                outputFile << "Test: Append, Class: " << getClassName<DT>() << ", Size: " << size << ", Append count: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
-            }
-            else if (type == 'v') {
-                DT * m = nullptr;
+                outputFile << "Test: Append, Class: " << getClassName<DT>() << ", Size: " << size << ", Append count: "
+                           << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: "
+                           << duration.count() << "μs" << std::endl;
+            } else if (type == 'v') {
+                DT *m = nullptr;
 
                 randMatrix<DT, VT>(m, numRows, numCols, min, max, 1.0, -1, nullptr);
 
-                DT * view;
+                DT *view;
                 if constexpr (std::is_same<DT, DenseMatrix<typename DT::VT>>::value) {
                     view = DataObjectFactory::create<DT>(m, rowLowerIncl, rowUpperExcl, 0, numCols);
                 } else {
@@ -355,8 +367,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
                 for (size_t i = 0; i < size; ++i) {
                     if (set) {
                         view->set(distrRowView(gen), distrCol(gen), distrVal(gen));
-                    }
-                    else {
+                    } else {
                         [[maybe_unused]] VT res = view->get(distrRowView(gen), distrCol(gen));
                     }
                     set = !set;
@@ -372,8 +383,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
                 for (size_t i = 0; i < size; ++i) {
                     if (set) {
                         m->set(distrRowView(gen), distrCol(gen), distrVal(gen));
-                    }
-                    else {
+                    } else {
                         [[maybe_unused]] VT res = m->get(distrRowView(gen), distrCol(gen));
                     }
                     set = !set;
@@ -381,9 +391,13 @@ TEMPLATE_PRODUCT_TEST_CASE("profile get/set/append/view", TAG_DATASTRUCTURES, (D
 
                 end_time = std::chrono::high_resolution_clock::now();
 
-                double diff = ((double)duration.count() / (double)(std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time)).count()) - 1;
+                double diff = ((double) duration.count() /
+                               (double) (std::chrono::duration_cast<std::chrono::microseconds>(
+                                       end_time - start_time)).count()) - 1;
 
-                outputFile << "Test: View, Class: " << getClassName<DT>() << ", Size: " << size << ", Count: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Difference from original to view: " << diff * 100 << "%" << std::endl;
+                outputFile << "Test: View, Class: " << getClassName<DT>() << ", Size: " << size << ", Count: " << size
+                           << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT>
+                           << ", Difference from original to view: " << diff * 100 << "%" << std::endl;
 
                 DataObjectFactory::destroy(m);
                 DataObjectFactory::destroy(view);
@@ -401,7 +415,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_aggall file", TAG_DATASTRUCTURES, (DenseMa
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile aggall", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile aggall", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/log_aggall.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -410,7 +425,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggall", TAG_DATASTRUCTURES, (DenseMatrix, C
     const VT min = 100;
     const VT max = 200;
 
-    for(size_t size : {500, 1000, 10000, 100000, 1000000}) {
+    for (size_t size: {500, 1000, 10000, 100000, 1000000}) {
         DYNAMIC_SECTION("size = " << size) {
             auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
             std::default_random_engine gen(seed);
@@ -430,7 +445,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggall", TAG_DATASTRUCTURES, (DenseMatrix, C
                 result.push_back(distrVal(gen));
             }
 
-            DT * m1 = genGivenVals<DT>(10, result);
+            DT *m1 = genGivenVals<DT>(10, result);
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -439,7 +454,9 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggall", TAG_DATASTRUCTURES, (DenseMatrix, C
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: AggAll, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: AggAll, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: "
+                       << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs"
+                       << std::endl;
 
             DataObjectFactory::destroy(m1);
         }
@@ -455,7 +472,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_aggcol file", TAG_DATASTRUCTURES, (DenseMa
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile aggcol", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile aggcol", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/log_aggcol.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -465,7 +483,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggcol", TAG_DATASTRUCTURES, (DenseMatrix, C
     const VT max = 200;
     using DTRes = DenseMatrix<VT>;
 
-    for(size_t size : {500, 1000, 10000, 100000, 1000000}) {
+    for (size_t size: {500, 1000, 10000, 100000, 1000000}) {
         DYNAMIC_SECTION("size = " << size) {
             auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
             std::default_random_engine gen(seed);
@@ -485,8 +503,8 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggcol", TAG_DATASTRUCTURES, (DenseMatrix, C
                 result.push_back(distrVal(gen));
             }
 
-            DT * m1 = genGivenVals<DT>(10, result);
-            DTRes * res = nullptr;
+            DT *m1 = genGivenVals<DT>(10, result);
+            DTRes *res = nullptr;
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -495,7 +513,9 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggcol", TAG_DATASTRUCTURES, (DenseMatrix, C
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: AggCol, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: AggCol, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: "
+                       << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs"
+                       << std::endl;
 
             DataObjectFactory::destroy(m1);
         }
@@ -511,7 +531,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_aggrow file", TAG_DATASTRUCTURES, (DenseMa
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile aggrow", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile aggrow", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/log_aggrow.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -521,7 +542,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggrow", TAG_DATASTRUCTURES, (DenseMatrix, C
     const VT max = 200;
     using DTRes = DenseMatrix<VT>;
 
-    for(size_t size : {500, 1000, 10000, 100000, 1000000}) {
+    for (size_t size: {500, 1000, 10000, 100000, 1000000}) {
         DYNAMIC_SECTION("size = " << size) {
             auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
             std::default_random_engine gen(seed);
@@ -541,8 +562,8 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggrow", TAG_DATASTRUCTURES, (DenseMatrix, C
                 result.push_back(distrVal(gen));
             }
 
-            DT * m1 = genGivenVals<DT>(10, result);
-            DTRes * res = nullptr;
+            DT *m1 = genGivenVals<DT>(10, result);
+            DTRes *res = nullptr;
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -551,7 +572,9 @@ TEMPLATE_PRODUCT_TEST_CASE("profile aggrow", TAG_DATASTRUCTURES, (DenseMatrix, C
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: AggRow, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: AggRow, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: "
+                       << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs"
+                       << std::endl;
 
             DataObjectFactory::destroy(m1);
         }
@@ -567,7 +590,8 @@ TEMPLATE_PRODUCT_TEST_CASE("empty log_ewbinary file", TAG_DATASTRUCTURES, (Dense
     CHECK(!(outputFile.is_open()));
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("profile ewbinary", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix), (double, uint8_t)) {
+TEMPLATE_PRODUCT_TEST_CASE("profile ewbinary", TAG_DATASTRUCTURES, (DenseMatrix, CSRMatrix, COOMatrix),
+                           (double, uint8_t)) {
     std::ofstream outputFile("prof_logs/log_ewbinary.txt", std::ios::app);
     CHECK(outputFile.is_open());
 
@@ -576,7 +600,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewbinary", TAG_DATASTRUCTURES, (DenseMatrix,
     const VT min = 100;
     const VT max = 200;
 
-    for(size_t size : {500, 1000, 10000, 100000, 1000000}) {
+    for (size_t size: {500, 1000, 10000, 100000, 1000000}) {
         DYNAMIC_SECTION("size = " << size) {
             auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
             std::default_random_engine gen(seed);
@@ -595,16 +619,16 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewbinary", TAG_DATASTRUCTURES, (DenseMatrix,
             for (size_t i = 0; i < size; ++i) {
                 result1.push_back(distrVal(gen));
             }
-            DT * m1 = genGivenVals<DT>(10, result1);
+            DT *m1 = genGivenVals<DT>(10, result1);
 
             std::vector<VT> result2;
             result2.reserve(size);
             for (size_t i = 0; i < size; ++i) {
                 result2.push_back(distrVal(gen));
             }
-            DT * m2 = genGivenVals<DT>(10, result2);
+            DT *m2 = genGivenVals<DT>(10, result2);
 
-            DT * res = nullptr;
+            DT *res = nullptr;
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -613,7 +637,9 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewbinary", TAG_DATASTRUCTURES, (DenseMatrix,
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: EwBinary, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: EwBinary, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: "
+                       << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs"
+                       << std::endl;
 
             DataObjectFactory::destroy(m1);
         }
@@ -639,7 +665,7 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewunary", TAG_DATASTRUCTURES, (DenseMatrix, 
     const VT max = 200;
     using DTRes = DenseMatrix<VT>;
 
-    for(size_t size : {500, 1000, 10000, 100000, 1000000}) {
+    for (size_t size: {500, 1000, 10000, 100000, 1000000}) {
         DYNAMIC_SECTION("size = " << size) {
             auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
             std::default_random_engine gen(seed);
@@ -658,9 +684,9 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewunary", TAG_DATASTRUCTURES, (DenseMatrix, 
             for (size_t i = 0; i < size; ++i) {
                 result1.push_back(distrVal(gen));
             }
-            DT * m1 = genGivenVals<DT>(10, result1);
+            DT *m1 = genGivenVals<DT>(10, result1);
 
-            DTRes * res = nullptr;
+            DTRes *res = nullptr;
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -669,7 +695,9 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewunary", TAG_DATASTRUCTURES, (DenseMatrix, 
             auto end_time = std::chrono::high_resolution_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-            outputFile << "Test: EwUnary, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: " << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs" << std::endl;
+            outputFile << "Test: EwUnary, Class: " << getClassName<DT>() << ", Size: " << size << ", Valuetype: "
+                       << ValueTypeUtils::cppNameFor<VT> << ", Execution time: " << duration.count() << "μs"
+                       << std::endl;
 
             DataObjectFactory::destroy(m1);
         }
@@ -677,3 +705,5 @@ TEMPLATE_PRODUCT_TEST_CASE("profile ewunary", TAG_DATASTRUCTURES, (DenseMatrix, 
     outputFile.close();
     CHECK(!(outputFile.is_open()));
 }
+
+

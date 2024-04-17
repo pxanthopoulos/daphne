@@ -70,6 +70,7 @@ set(TEST_SOURCES
         runtime/local/datastructures/MatrixTest.cpp
         runtime/local/datastructures/TaskQueueTest.cpp
         runtime/local/datastructures/SparseProfiling.cpp
+        runtime/local/datastructures/ProfilingAdditions.cpp
 
         runtime/local/io/ReadCsvTest.cpp
         runtime/local/io/ReadParquetTest.cpp
